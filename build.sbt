@@ -1,0 +1,50 @@
+val scala211 = "2.11.11"
+val scala212 = "2.12.4"
+
+sonatypeProfileName := "org.lyranthe"
+
+inThisBuild(
+  List(
+    organization := "org.lyranthe",
+    scalaVersion := "2.12.4",
+    scalacOptions ++= Seq("-Ypartial-unification"),
+    publishTo := Some(
+      if (isSnapshot.value)
+        Opts.resolver.sonatypeSnapshots
+      else
+        Opts.resolver.sonatypeStaging
+    ),
+    pomExtra in Global := {
+      <url>https://github.com/fiadliel/http4s-timer</url>
+      <licenses>
+        <license>
+          <name>MIT</name>
+          <url>https://github.com/fiadliel/http4s-timer/blob/master/LICENSE</url>
+        </license>
+      </licenses>
+      <developers>
+        <developer>
+          <id>fiadliel</id>
+          <name>Gary Coady</name>
+          <url>https://www.lyranthe.org/</url>
+        </developer>
+      </developers>
+    }
+  )
+)
+
+lazy val core = project
+  .in(file("core"))
+  .settings(
+    name := "http4s-timer-core",
+    crossScalaVersions := List(scala211, scala212),
+    libraryDependencies += "org.http4s" %% "http4s-core" % "0.18.0-M8"
+  )
+
+lazy val newrelic = project
+  .in(file("newrelic"))
+  .settings(
+    name := "http4s-timer-newrelic",
+    crossScalaVersions := List(scala211, scala212),
+    libraryDependencies += "com.newrelic.agent.java" % "newrelic-api" % "3.45.0"
+  ) dependsOn core
