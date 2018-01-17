@@ -19,8 +19,7 @@ object TimedAuthedService {
                   .time(serviceName,
                         response._1,
                         req.req,
-                        response._2,
-                        authInfoToRemoteUser(req.authInfo))))
+                        authInfoToRemoteUser(req.authInfo))(response._2)))
           .applyOrElse(req, Function.const(OptionT.none)))
   }
 }

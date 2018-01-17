@@ -12,7 +12,7 @@ object TimedService {
       req =>
         pf.andThen(response =>
             OptionT.liftF(implicitly[Timer[F]]
-              .time(serviceName, response._1, req, response._2)))
+              .time(serviceName, response._1, req)(response._2)))
           .applyOrElse(req, Function.const(OptionT.none)))
   }
 }

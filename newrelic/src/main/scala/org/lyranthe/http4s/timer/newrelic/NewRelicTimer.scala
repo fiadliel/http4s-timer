@@ -14,18 +14,28 @@ import scala.collection.JavaConverters._
 
 class NewRelicTimer[F[_]](implicit F: Sync[F]) extends Timer[F] {
   @Trace(dispatcher = true)
-  private def _startTransactionAndGetSegment(serviceName: String,
-                                             requestName: String) = {
+  private def _startExternalAndGetSegment(serviceName: String,
+                                          requestName: String) = {
     NewRelic.getAgent.getTracedMethod.setMetricName(serviceName)
-    NewRelic.getAgent.getTransaction.startSegment(requestName, "headers")
+    NewRelic.getAgent.getTransaction.startSegment("External", requestName)
+  }
+
+  @Trace(dispatcher = true)
+  private def _startWebTransactionAndGetSegment(serviceName: String,
+                                                requestName: String) = {
+    NewRelic.getAgent.getTracedMethod.setMetricName(serviceName)
+    NewRelic.getAgent.getTransaction.startSegment("WebRequestPhase", "Headers")
   }
 
   private[timer] def startTransactionAndGetSegment(serviceName: String,
-                                                   requestName: String) =
-    F.delay(_startTransactionAndGetSegment(serviceName, requestName))
+                                                   requestName: String,
+                                                   isExternal: Boolean) =
+    if (isExternal)
+      F.delay(_startExternalAndGetSegment(serviceName, requestName))
+    else
+      F.delay(_startWebTransactionAndGetSegment(serviceName, requestName))
 
-  private[timer] def setRequestInfo(serviceName: String,
-                                    requestName: String,
+  private[timer] def setRequestInfo(requestName: String,
                                     transaction: Transaction,
                                     request: Request[F],
                                     user: Option[String]) = {
@@ -33,7 +43,7 @@ class NewRelicTimer[F[_]](implicit F: Sync[F]) extends Timer[F] {
       transaction.setWebRequest(new Http4sRequest(request, user))
       transaction.setTransactionName(TransactionNamePriority.CUSTOM_HIGH,
                                      true,
-                                     serviceName,
+                                     "WebRequest",
                                      requestName)
     }
   }
@@ -72,45 +82,58 @@ class NewRelicTimer[F[_]](implicit F: Sync[F]) extends Timer[F] {
     }
   }
 
-  private[timer] def getBodySegment(transaction: Transaction,
-                                    segmentName: String) =
-    F.delay(transaction.startSegment(segmentName, "body"))
-
-  def noticeErrorForStream[A](segment: NRSegment,
-                              s: Stream[F, A]): Stream[F, A] =
+  private[timer] def noticeErrorForStream[A](segment: NRSegment,
+                                             s: Stream[F, A]): Stream[F, A] =
     s.onError {
       case e => Stream.eval(noticeError(segment, e))
     }
 
-  def endSegment(segment: NRSegment): F[Unit] = F.delay(segment.end())
+  private[timer] def endSegment(segment: NRSegment): F[Unit] =
+    F.delay(segment.end())
 
-  def startBodySegment(category: String, segment: NRSegment): F[NRSegment] = {
-    F.delay(segment.getTransaction.startSegment(category, "body")) << endSegment(segment)
+  private[timer] def startBodySegment(segment: NRSegment): F[NRSegment] = {
+    F.delay(segment.getTransaction.startSegment("WebRequestPhase", "Body")) <* endSegment(
+      segment)
   }
 
   private[timer] def timeStream(segment: NRSegment,
-                                category: String,
                                 body: EntityBody[F]): EntityBody[F] =
-    fs2.Stream.bracket(startBodySegment(category, segment))(
-      noticeErrorForStream(_, body),
-      endSegment)
+    fs2.Stream.bracket(startBodySegment(segment))(noticeErrorForStream(_, body),
+                                                  endSegment)
 
   def time(serviceName: String,
            requestName: String,
            request: org.http4s.Request[F],
-           response: F[org.http4s.Response[F]],
-           user: Option[String] = None): F[org.http4s.Response[F]] = {
+           user: Option[String] = None)(
+      response: F[org.http4s.Response[F]]): F[org.http4s.Response[F]] = {
     for {
-      segment <- startTransactionAndGetSegment(serviceName, requestName)
-      _ <- setRequestInfo(serviceName,
-                          s"$requestName (${request.method.name})",
+      segment <- startTransactionAndGetSegment(serviceName, requestName, false)
+      _ <- setRequestInfo(s"$requestName (${request.method.name})",
                           segment.getTransaction,
                           request,
                           user)
       completedResponse <- response.attempt
       modifiedResponse <- setResponseInfo(segment, completedResponse)
       responseWithTimedBody = modifiedResponse.withBodyStream(
-        timeStream(segment, requestName, modifiedResponse.body))
+        timeStream(segment, modifiedResponse.body))
     } yield responseWithTimedBody
+  }
+
+  private[timer] def modifyExternalRequest[A](segment: NRSegment,
+                                              completedRequest: F[A]) = {
+    completedRequest.attempt flatMap {
+      case Left(t) =>
+        noticeError(segment, t) >> endSegment(segment) >> F.raiseError[A](t)
+      case Right(result) =>
+        endSegment(segment) >> F.pure(result)
+    }
+  }
+
+  def timeExternal[A](serviceName: String, requestName: String)(
+      action: F[A]): F[A] = {
+    for {
+      segment <- startTransactionAndGetSegment(serviceName, requestName, true)
+      completedRequest <- modifyExternalRequest(segment, action)
+    } yield completedRequest
   }
 }
