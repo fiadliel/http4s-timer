@@ -44,7 +44,7 @@ lazy val core = project
   .settings(
     name := "http4s-timer-core",
     crossScalaVersions := List(scala211, scala212),
-    libraryDependencies += "org.http4s" %% "http4s-core" % "0.18.1"
+    libraryDependencies += "org.http4s" %% "http4s-core" % "0.18.2"
   )
 
 lazy val newrelic = project
