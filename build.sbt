@@ -54,5 +54,5 @@ lazy val newrelic = project
   .settings(
     name := "http4s-timer-newrelic",
     crossScalaVersions := List(scala211, scala212),
-    libraryDependencies += "com.newrelic.agent.java" % "newrelic-api" % "3.45.0"
+    libraryDependencies += "com.newrelic.agent.java" % "newrelic-api" % "4.0.1"
   ) dependsOn core
