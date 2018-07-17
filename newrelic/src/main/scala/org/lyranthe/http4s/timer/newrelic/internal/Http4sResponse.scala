@@ -1,4 +1,6 @@
-package org.lyranthe.http4s.timer.newrelic.internal
+package org.lyranthe.http4s.timer
+package newrelic
+package internal
 
 import cats.Functor
 import com.newrelic.api.agent.{ExtendedResponse, HeaderType}

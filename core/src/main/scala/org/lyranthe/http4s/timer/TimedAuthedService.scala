@@ -5,7 +5,7 @@ import cats.data.{Kleisli, OptionT}
 import org.http4s._
 
 object TimedAuthedService {
-  def apply[T, F[_]: Timer: Applicative](
+  def apply[T, F[_]: RequestTimer: Applicative](
       serviceName: String,
       authInfoToRemoteUser: T => Option[String])(
       pf: PartialFunction[AuthedRequest[F, T], (String, F[Response[F]])])
@@ -15,7 +15,7 @@ object TimedAuthedService {
         pf.andThen(
             response =>
               OptionT.liftF(
-                implicitly[Timer[F]]
+                RequestTimer[F]
                   .time(serviceName,
                         response._1,
                         req.req,
