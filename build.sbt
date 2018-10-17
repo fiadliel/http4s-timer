@@ -23,7 +23,7 @@ inThisBuild(
   List(
     organization := "org.lyranthe",
     scalaVersion := "2.12.4",
-    scalacOptions ++= Seq("-Ypartial-unification"),
+    scalacOptions ++= Seq("-Ypartial-unification" ,"-deprecation"),
     git.useGitDescribe := true
   )
 )
@@ -44,7 +44,7 @@ lazy val core = project
   .settings(
     name := "http4s-timer-core",
     crossScalaVersions := List(scala211, scala212),
-    libraryDependencies += "org.http4s" %% "http4s-core" % "0.18.15",
+    libraryDependencies += "org.http4s" %% "http4s-core" % "0.19.0",
     libraryDependencies += "com.newrelic.agent.java" % "newrelic-api" % "4.2.0"
   )
 
