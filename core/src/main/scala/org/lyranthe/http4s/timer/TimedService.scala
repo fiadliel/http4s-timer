@@ -7,7 +7,7 @@ import org.http4s._
 object TimedService {
   def apply[F[_]: RequestTimer: Applicative](serviceName: String)(
       pf: PartialFunction[Request[F], (String, F[Response[F]])])
-    : HttpService[F] = {
+    : HttpRoutes[F] = {
     Kleisli(
       req =>
         pf.andThen(response =>
