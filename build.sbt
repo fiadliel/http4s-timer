@@ -1,5 +1,5 @@
-val scala211 = "2.11.11"
-val scala212 = "2.12.4"
+val scala212 = "2.12.9"
+val scala213 = "2.13.0"
 
 sonatypeProfileName := "org.lyranthe"
 pomExtra in Global := {
@@ -22,8 +22,7 @@ pomExtra in Global := {
 inThisBuild(
   List(
     organization := "org.lyranthe",
-    scalaVersion := "2.12.4",
-    scalacOptions ++= Seq("-Ypartial-unification"),
+    scalaVersion := scala213,
     git.useGitDescribe := true
   )
 )
@@ -43,9 +42,9 @@ lazy val core = project
   .settings(publishSettings)
   .settings(
     name := "http4s-timer-core",
-    crossScalaVersions := List(scala211, scala212),
-    libraryDependencies += "org.http4s" %% "http4s-core" % "0.18.15",
-    libraryDependencies += "com.newrelic.agent.java" % "newrelic-api" % "4.2.0"
+    crossScalaVersions := List(scala212, scala213),
+    libraryDependencies += "org.http4s" %% "http4s-core" % "0.21.0-M4",
+    libraryDependencies += "com.newrelic.agent.java" % "newrelic-api" % "5.3.0"
   )
 
 lazy val newrelic = project
@@ -54,5 +53,5 @@ lazy val newrelic = project
   .settings(publishSettings)
   .settings(
     name := "http4s-timer-newrelic",
-    crossScalaVersions := List(scala211, scala212)
+    crossScalaVersions := List(scala212, scala213)
   ) dependsOn core

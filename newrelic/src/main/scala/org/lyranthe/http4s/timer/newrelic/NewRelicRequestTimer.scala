@@ -123,8 +123,7 @@ class NewRelicRequestTimer[F[_]](implicit F: Sync[F]) extends RequestTimer[F] {
 
   private[timer] def timeStream(segment: NRSegment,
                                 body: EntityBody[F]): EntityBody[F] =
-    fs2.Stream.bracket(startBodySegment(segment))(noticeErrorForStream(_, body),
-                                                  endSegment)
+    fs2.Stream.bracket(startBodySegment(segment))(endSegment).flatMap(noticeErrorForStream(_, body))
 
   def time(serviceName: String,
            requestName: String,
