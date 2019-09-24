@@ -1,4 +1,4 @@
-package org.lyranthe.http4s.timer
+package pl.datart.http4s.timer
 package newrelic
 
 import java.net.URI
@@ -8,7 +8,7 @@ import cats.implicits._
 import com.newrelic.api.agent.{Segment => NRSegment, _}
 import fs2._
 import org.http4s.{EntityBody, Request, Response}
-import org.lyranthe.http4s.timer.newrelic.internal.{
+import pl.datart.http4s.timer.newrelic.internal.{
   Http4sRequest,
   Http4sResponse
 }
@@ -19,46 +19,22 @@ import scala.util.Try
 class NewRelicRequestTimer[F[_]](implicit F: Sync[F]) extends RequestTimer[F] {
   @Trace(dispatcher = true)
   private def _startExternalAndGetSegment(
-      serviceName: String,
+      routesName: String,
       requestName: String,
       externalParameters: ExternalParameters) = {
     val agent = NewRelic.getAgent
     val method = agent.getTracedMethod
 
     method.reportAsExternal(externalParameters)
-    method.setMetricName(serviceName)
+    method.setMetricName(routesName)
     agent.getTransaction.startSegment("External", requestName)
   }
 
-  private[timer] def startExternalAndGetSegment(
-      serviceName: String,
-      requestName: String,
-      externalParameters: ExternalParameters): F[NRSegment] =
-    F.delay(
-      _startExternalAndGetSegment(serviceName, requestName, externalParameters))
-
   @Trace(dispatcher = true)
-  private def _startWebTransactionAndGetSegment(serviceName: String,
-                                                requestName: String) = {
-    NewRelic.getAgent.getTracedMethod.setMetricName(serviceName)
+  private def _startWebTransactionAndGetSegment(routesName: String) = {
+    NewRelic.getAgent.getTracedMethod.setMetricName(routesName)
     NewRelic.getAgent.getTransaction.startSegment("WebRequestPhase", "Headers")
   }
-
-  private[timer] def startWebTransactionAndGetSegment(
-      serviceName: String,
-      requestName: String): F[NRSegment] =
-    F.delay(_startWebTransactionAndGetSegment(serviceName, requestName))
-
-  private[timer] def startTransactionAndGetSegment(
-      serviceName: String,
-      requestName: String,
-      externalParameters: Option[ExternalParameters]) =
-    externalParameters match {
-      case None =>
-        F.delay(_startWebTransactionAndGetSegment(serviceName, requestName))
-      case Some(params) =>
-        F.delay(_startExternalAndGetSegment(serviceName, requestName, params))
-    }
 
   private[timer] def setRequestInfo(requestName: String,
                                     transaction: Transaction,
@@ -123,17 +99,17 @@ class NewRelicRequestTimer[F[_]](implicit F: Sync[F]) extends RequestTimer[F] {
 
   private[timer] def timeStream(segment: NRSegment,
                                 body: EntityBody[F]): EntityBody[F] =
-    fs2.Stream.bracket(startBodySegment(segment))(noticeErrorForStream(_, body),
-                                                  endSegment)
+    fs2.Stream.bracket(startBodySegment(segment))(endSegment).flatMap(noticeErrorForStream(_, body))
 
-  def time(serviceName: String,
+
+  def time(routesName: String,
            requestName: String,
            request: org.http4s.Request[F],
            user: Option[String] = None)(
       response: F[org.http4s.Response[F]]): F[org.http4s.Response[F]] = {
     for {
       segment <- F.delay(
-        _startWebTransactionAndGetSegment(serviceName, requestName))
+        _startWebTransactionAndGetSegment(routesName))
       _ <- setRequestInfo(s"$requestName (${request.method.name})",
                           segment.getTransaction,
                           request,
@@ -156,7 +132,7 @@ class NewRelicRequestTimer[F[_]](implicit F: Sync[F]) extends RequestTimer[F] {
   }
 
   def timeExternal(
-      serviceName: String,
+      routesName: String,
       requestName: String,
       request: Request[F])(response: F[Response[F]]): F[Response[F]] = {
     val uri = Try(URI.create(request.uri.toString())).toOption
@@ -173,7 +149,7 @@ class NewRelicRequestTimer[F[_]](implicit F: Sync[F]) extends RequestTimer[F] {
 
         for {
           segment <- F.delay(
-            _startExternalAndGetSegment(serviceName,
+            _startExternalAndGetSegment(routesName,
                                         requestName,
                                         externalParameters))
           completedRequest <- modifyExternalRequest(segment, response)
@@ -184,12 +160,12 @@ class NewRelicRequestTimer[F[_]](implicit F: Sync[F]) extends RequestTimer[F] {
   }
 
   def timeExternal[A](
-      serviceName: String,
+      routesName: String,
       requestName: String,
       externalParameters: ExternalParameters)(action: F[A]): F[A] = {
     for {
       segment <- F.delay(
-        _startExternalAndGetSegment(serviceName,
+        _startExternalAndGetSegment(routesName,
                                     requestName,
                                     externalParameters))
       completedRequest <- modifyExternalRequest(segment, action)

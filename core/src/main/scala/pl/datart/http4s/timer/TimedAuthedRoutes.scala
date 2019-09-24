@@ -1,22 +1,22 @@
-package org.lyranthe.http4s.timer
+package pl.datart.http4s.timer
 
 import cats.Applicative
 import cats.data.{Kleisli, OptionT}
 import org.http4s._
 
-object TimedAuthedService {
+object TimedAuthedRoutes {
   def apply[T, F[_]: RequestTimer: Applicative](
-      serviceName: String,
+      routesName: String,
       authInfoToRemoteUser: T => Option[String])(
       pf: PartialFunction[AuthedRequest[F, T], (String, F[Response[F]])])
-    : AuthedService[T, F] = {
+    : AuthedRoutes[T, F] = {
     Kleisli(
       req =>
         pf.andThen(
             response =>
               OptionT.liftF(
                 RequestTimer[F]
-                  .time(serviceName,
+                  .time(routesName,
                         response._1,
                         req.req,
                         authInfoToRemoteUser(req.authInfo))(response._2)))
