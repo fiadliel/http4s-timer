@@ -1,4 +1,4 @@
-package org.lyranthe.http4s.timer
+package pl.datart.http4s.timer
 package newrelic
 package internal
 

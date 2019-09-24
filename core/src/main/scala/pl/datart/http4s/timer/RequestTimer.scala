@@ -1,22 +1,22 @@
-package org.lyranthe.http4s.timer
+package pl.datart.http4s.timer
 
 import com.newrelic.api.agent.ExternalParameters
 import org.http4s._
 
 trait RequestTimer[F[_]] {
   def time(
-      serviceName: String,
+      routesName: String,
       requestName: String,
       request: Request[F],
       user: Option[String] = None)(response: F[Response[F]]): F[Response[F]]
 
   def timeExternal(
-      serviceName: String,
+      routesName: String,
       requestName: String,
       request: Request[F])(response: F[Response[F]]): F[Response[F]]
 
   def timeExternal[A](
-      serviceName: String,
+      routesName: String,
       requestName: String,
       externalParameters: ExternalParameters)(action: F[A]): F[A]
 }

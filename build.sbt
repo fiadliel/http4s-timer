@@ -1,58 +1,65 @@
-val scala211 = "2.11.11"
-val scala212 = "2.12.4"
-
-sonatypeProfileName := "org.lyranthe"
-pomExtra in Global := {
-  <url>https://github.com/fiadliel/http4s-timer</url>
-  <licenses>
-    <license>
-      <name>MIT</name>
-      <url>https://github.com/fiadliel/http4s-timer/blob/master/LICENSE</url>
-    </license>
-  </licenses>
-  <developers>
-    <developer>
-      <id>fiadliel</id>
-      <name>Gary Coady</name>
-      <url>https://www.lyranthe.org/</url>
-    </developer>
-  </developers>
-}
+val scala212 = "2.12.10"
+val scala213 = "2.13.1"
 
 inThisBuild(
   List(
-    organization := "org.lyranthe",
-    scalaVersion := "2.12.4",
-    scalacOptions ++= Seq("-Ypartial-unification"),
+    organization := "pl.datart",
+    scalaVersion := scala213,
     git.useGitDescribe := true
   )
 )
 
-val publishSettings = List(
+val publishSettings = Seq(
+  sonatypeProfileName := "pl.datart",
+  organization := "pl.datart",
+  homepage := Some(url("https://github.com/eltherion/http4s-timer")),
+  licenses := Seq("GPLv3" -> url("https://www.gnu.org/licenses/gpl-3.0")),
+  scmInfo := Some(ScmInfo(url("https://github.com/eltherion/http4s-timer"), "scm:git:git@github.com:eltherion/http4s-timer.git")),
   publishTo := Some(
     if (isSnapshot.value)
       Opts.resolver.sonatypeSnapshots
     else
       Opts.resolver.sonatypeStaging
-  )
+  ),
+  publishMavenStyle := true,
+  publishArtifact in Test := false,
+  pomIncludeRepository := { _ => false },
+  pomExtra := (
+    <developers>
+      <developer>
+        <id>eltherion</id>
+        <name>Mateusz Murawski</name>
+        <url>http://www.datart.pl/</url>
+      </developer>
+    </developers>
+    )
 )
 
-lazy val core = project
+
+val commonSettings = Seq(
+  scalacOptions ++= {
+    if (scalaVersion.value >= "2.13.0") Seq() else Seq("-Ypartial-unification")
+  }
+)
+
+val core = project
   .in(file("core"))
   .enablePlugins(GitVersioning)
+  .settings(commonSettings)
   .settings(publishSettings)
   .settings(
     name := "http4s-timer-core",
-    crossScalaVersions := List(scala211, scala212),
-    libraryDependencies += "org.http4s" %% "http4s-core" % "0.18.15",
-    libraryDependencies += "com.newrelic.agent.java" % "newrelic-api" % "4.2.0"
+    crossScalaVersions := List(scala212, scala213),
+    libraryDependencies += "org.http4s" %% "http4s-core" % "0.21.0-M5",
+    libraryDependencies += "com.newrelic.agent.java" % "newrelic-api" % "5.6.0"
   )
 
-lazy val newrelic = project
+val newrelic = project
   .in(file("newrelic"))
   .enablePlugins(GitVersioning)
+  .settings(commonSettings)
   .settings(publishSettings)
   .settings(
     name := "http4s-timer-newrelic",
-    crossScalaVersions := List(scala211, scala212)
+    crossScalaVersions := List(scala212, scala213)
   ) dependsOn core
