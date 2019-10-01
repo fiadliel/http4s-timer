@@ -51,7 +51,7 @@ val core = project
     name := "http4s-timer-core",
     crossScalaVersions := List(scala212, scala213),
     libraryDependencies += "org.http4s" %% "http4s-core" % "0.21.0-M5",
-    libraryDependencies += "com.newrelic.agent.java" % "newrelic-api" % "5.6.0"
+    libraryDependencies += "com.newrelic.agent.java" % "newrelic-api" % "5.7.0"
   )
 
 val newrelic = project
