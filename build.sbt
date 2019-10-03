@@ -15,12 +15,7 @@ val publishSettings = Seq(
   homepage := Some(url("https://github.com/eltherion/http4s-timer")),
   licenses := Seq("GPLv3" -> url("https://www.gnu.org/licenses/gpl-3.0")),
   scmInfo := Some(ScmInfo(url("https://github.com/eltherion/http4s-timer"), "scm:git:git@github.com:eltherion/http4s-timer.git")),
-  publishTo := Some(
-    if (isSnapshot.value)
-      Opts.resolver.sonatypeSnapshots
-    else
-      Opts.resolver.sonatypeStaging
-  ),
+  publishTo := sonatypePublishToBundle.value,
   publishMavenStyle := true,
   publishArtifact in Test := false,
   pomIncludeRepository := { _ => false },
@@ -63,3 +58,14 @@ val newrelic = project
     name := "http4s-timer-newrelic",
     crossScalaVersions := List(scala212, scala213)
   ) dependsOn core
+
+val noPublishSettings = Seq(
+  skip in publish := true,
+  publishArtifact := false
+)
+
+val root = project.in(file("."))
+  .settings(commonSettings: _*)
+  .settings(noPublishSettings: _*)
+  .aggregate(core, newrelic)
+  .dependsOn(core, newrelic)
