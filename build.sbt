@@ -4,7 +4,6 @@ val scala213 = "2.13.1"
 inThisBuild(
   List(
     organization := "pl.datart",
-    scalaVersion := scala213,
     git.useGitDescribe := true
   )
 )
@@ -32,7 +31,8 @@ val publishSettings = Seq(
 
 
 val commonSettings = Seq(
-  scalacOptions ++= {
+  crossScalaVersions := List(scala212, scala213),
+    scalacOptions ++= {
     if (scalaVersion.value >= "2.13.0") Seq() else Seq("-Ypartial-unification")
   }
 )
@@ -44,9 +44,8 @@ val core = project
   .settings(publishSettings)
   .settings(
     name := "http4s-timer-core",
-    crossScalaVersions := List(scala212, scala213),
     libraryDependencies += "org.http4s" %% "http4s-core" % "0.21.1",
-    libraryDependencies += "com.newrelic.agent.java" % "newrelic-api" % "5.10.0"
+    libraryDependencies += "com.newrelic.agent.java" % "newrelic-api" % "5.11.0"
   )
 
 val newrelic = project
@@ -56,7 +55,6 @@ val newrelic = project
   .settings(publishSettings)
   .settings(
     name := "http4s-timer-newrelic",
-    crossScalaVersions := List(scala212, scala213)
   ) dependsOn core
 
 val noPublishSettings = Seq(
