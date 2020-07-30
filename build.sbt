@@ -45,7 +45,7 @@ val core = project
   .settings(
     name := "http4s-timer-core",
     libraryDependencies += "org.http4s" %% "http4s-core" % "0.21.6",
-    libraryDependencies += "com.newrelic.agent.java" % "newrelic-api" % "5.13.0"
+    libraryDependencies += "com.newrelic.agent.java" % "newrelic-api" % "5.14.0"
   )
 
 val newrelic = project
