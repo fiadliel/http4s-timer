@@ -42,9 +42,9 @@ Similarly, you should modify any `AuthedRoutes` to use `TimedAuthedRoutes`.
 
 ## Library Dependencies
 
-The core library is dependent on `"org.http4s" %% "http4s-core" % "0.21.7"`.
+The core library is dependent on `"org.http4s" %% "http4s-core" % "0.21.8"`.
 
-The newrelic library is also dependent on `"com.newrelic.agent.java" % "newrelic-api" % "6.0.0"`
+The newrelic library is also dependent on `"com.newrelic.agent.java" % "newrelic-api" % "6.1.0"`
 
 ## Origin & credits
 
