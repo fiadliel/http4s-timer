@@ -4,7 +4,7 @@ package internal
 
 import com.newrelic.api.agent.{ExtendedRequest, HeaderType}
 import org.http4s.Request
-import org.http4s.syntax.string._
+import org.typelevel.ci.CIString
 
 import scala.collection.JavaConverters._
 
@@ -32,5 +32,5 @@ private[newrelic] class Http4sRequest[F[_]](request: Request[F],
     HeaderType.HTTP
 
   override def getHeader(name: String): String =
-    request.headers.get(name.ci).map(_.value).orNull
+    request.headers.get(CIString(name)).map(_.value).orNull
 }

@@ -19,7 +19,7 @@ object TimedAuthedRoutes {
                   .time(routesName,
                         response._1,
                         req.req,
-                        authInfoToRemoteUser(req.authInfo))(response._2)))
+                        authInfoToRemoteUser(req.context))(response._2)))
           .applyOrElse(req, Function.const(OptionT.none)))
   }
 }

@@ -1,5 +1,6 @@
 val scala212 = "2.12.12"
-val scala213 = "2.13.3"
+val scala213 = "2.13.4"
+val scala3   = "3.0.0-M3"
 
 inThisBuild(
   List(
@@ -31,9 +32,11 @@ val publishSettings = Seq(
 
 
 val commonSettings = Seq(
-  crossScalaVersions := List(scala212, scala213),
+  crossScalaVersions := List(scala212, scala213, scala3),
     scalacOptions ++= {
-    if (scalaVersion.value >= "2.13.0") Seq() else Seq("-Ypartial-unification")
+      (if (isDotty.value) Seq("-source:3.0-migration") else Nil) ++
+        (if (scalaVersion.value >= "2.13.0") Seq() else Seq("-Ypartial-unification")) ++
+        Seq("-language:higherKinds", "-deprecation", "-feature")
   }
 )
 
@@ -44,8 +47,9 @@ val core = project
   .settings(publishSettings)
   .settings(
     name := "http4s-timer-core",
-    libraryDependencies += "org.http4s" %% "http4s-core" % "0.21.15",
-    libraryDependencies += "com.newrelic.agent.java" % "newrelic-api" % "6.3.0"
+    libraryDependencies += "org.http4s" %% "http4s-core" % "1.0.0-M10",
+    libraryDependencies += "com.newrelic.agent.java" % "newrelic-api" % "6.3.0",
+    libraryDependencies := libraryDependencies.value.map(_.withDottyCompat(scalaVersion.value))
   )
 
 val newrelic = project
