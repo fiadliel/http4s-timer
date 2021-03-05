@@ -86,7 +86,7 @@ class NewRelicRequestTimer[F[_]](implicit F: Sync[F]) extends RequestTimer[F] {
   private[timer] def noticeErrorForStream[A](segment: NRSegment,
                                              s: Stream[F, A]): Stream[F, A] =
     s.handleErrorWith { e =>
-      Stream.eval_(noticeError(segment, e))
+      Stream.eval(noticeError(segment, e)).drain
     }
 
   private[timer] def endSegment(segment: NRSegment): F[Unit] =

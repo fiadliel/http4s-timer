@@ -32,5 +32,5 @@ private[newrelic] class Http4sRequest[F[_]](request: Request[F],
     HeaderType.HTTP
 
   override def getHeader(name: String): String =
-    request.headers.get(CIString(name)).map(_.value).orNull
+    request.headers.get(CIString(name)).map(_.head.value).orNull
 }
